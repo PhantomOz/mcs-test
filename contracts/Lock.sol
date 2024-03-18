@@ -7,5 +7,9 @@ import {Token} from "./Token.sol";
 /// @author Favour Aniogor
 /// @notice A crowdfunding campaign where users can pledge and claim funds to, and claim funds from, the contract.
 contract CrowdFund {
-    Token private immutable i_crowdFundToken;
+    Token private immutable i_crowdFundToken; //An ERC20 Token for crowdfunding
+
+    constructor(address _token) {
+        i_crowdFundToken = Token(_token);
+    }
 }
