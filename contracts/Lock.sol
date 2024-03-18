@@ -9,6 +9,8 @@ error CrowdFund__FundingGoalCantBeZero();
 error CrowdFund__ProjectDoesNotExist(uint256 id);
 error CrowdFund__AmountCantBeZero();
 error CrowdFund__InsufficientBalance();
+error CrowdFund__TimelineNotElapsed();
+error CrowdFund__FundingGoalMet();
 
 /// @title CrowdFund
 /// @author Favour Aniogor
@@ -81,8 +83,23 @@ contract CrowdFund {
         if (i_crowdFundToken.balanceOf(msg.sender) < _amount) {
             revert CrowdFund__InsufficientBalance();
         }
+        //check if project is still active
         i_crowdFundToken.transferFrom(msg.sender, address(this), _amount);
         s_projectIdToBalance[_id] += _amount;
         s_addressToAmountFunded[msg.sender][_id] += _amount;
+    }
+
+    ///@notice This allows users to be able to withdraw their funds if the timeline of a project elapses and the goal is not met
+    function recoverFunds(uint256 _id) external projectExist(_id) {
+        if (s_idToProject[_id].timeline < block.timestamp) {
+            revert CrowdFund__TimelineNotElapsed();
+        }
+        if (s_projectIdToBalance[_id] >= s_idToProject[_id].fundingGoal) {
+            revert CrowdFund__FundingGoalMet();
+        }
+        uint256 _balance = s_addressToAmountFunded[msg.sender][_id];
+        s_addressToAmountFunded[msg.sender][_id] = 0;
+        s_projectIdToBalance[_id] -= _balance;
+        i_crowdFundToken.transfer(_balance);
     }
 }
