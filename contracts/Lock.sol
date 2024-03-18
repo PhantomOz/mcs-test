@@ -14,6 +14,9 @@ contract CrowdFund {
     Token private immutable i_crowdFundToken; //An ERC20 Token for crowdfunding
     mapping(address => bool) private s_projectOwners; //A map of all the Owners
     mapping(uint256 => Project) private s_idToProject; //A map of a projectId to project
+    mapping(uint256 => uint256) private s_projectIdToBalance; //A map of the projectId to the amount it has be funded(balance)
+    mapping(address => mapping(uint256 => uint256))
+        private s_addressToAmountFunded; //A 2D Map of the address of a user to the amount donated to a projectId.
     uint256 private s_id; //this serves as the projects count.
 
     //Oir custom datatype Project
@@ -22,6 +25,7 @@ contract CrowdFund {
         uint256 timeline;
     }
 
+    ///@notice This checks and ensures the msg.sender is a owner
     modifier onlyOwners() {
         if (!s_projectOwners[msg.sender]) {
             revert CrowdFund__NotAOwner();
@@ -51,5 +55,14 @@ contract CrowdFund {
         Project _newProject = Project(_fundingGoal, _timeLine);
         s_idToProject[s_id] = _newProject;
         s_id++;
+    }
+
+    ///@notice This allows users to fund project that have been created and timeline has not exceeded
+    ///@param _id the id of the project you want to fund
+    ///@param _amount the value to want to fund the project with.
+    function fundProject(uint256 _id, uint256 _amount) external {
+        i_crowdFundToken.transferFrom(msg.sender, address(this), _amount);
+        s_projectIdToBalance[_id] += _amount;
+        s_addressToAmountFunded[msg.sender][_id] += _amount;
     }
 }
