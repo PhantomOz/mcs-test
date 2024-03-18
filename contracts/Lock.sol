@@ -10,6 +10,7 @@ error CrowdFund__ProjectDoesNotExist(uint256 id);
 error CrowdFund__AmountCantBeZero();
 error CrowdFund__InsufficientBalance();
 error CrowdFund__TimelineNotElapsed();
+error CrowdFund__TimelineElapsed();
 error CrowdFund__FundingGoalMet();
 
 /// @title CrowdFund
@@ -77,19 +78,22 @@ contract CrowdFund {
         uint256 _id,
         uint256 _amount
     ) external projectExist(_id) {
+        if (s_idToProject[_id].timeline >= block.timestamp) {
+            revert CrowdFund__TimelineElapsed();
+        }
         if (_amount <= 0) {
             revert CrowdFund__AmountCantBeZero();
         }
         if (i_crowdFundToken.balanceOf(msg.sender) < _amount) {
             revert CrowdFund__InsufficientBalance();
         }
-        //check if project is still active
         i_crowdFundToken.transferFrom(msg.sender, address(this), _amount);
         s_projectIdToBalance[_id] += _amount;
         s_addressToAmountFunded[msg.sender][_id] += _amount;
     }
 
     ///@notice This allows users to be able to withdraw their funds if the timeline of a project elapses and the goal is not met
+    ///@param _id the project you want to recover your funds from.
     function recoverFunds(uint256 _id) external projectExist(_id) {
         if (s_idToProject[_id].timeline < block.timestamp) {
             revert CrowdFund__TimelineNotElapsed();
