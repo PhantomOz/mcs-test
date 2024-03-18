@@ -6,6 +6,9 @@ import {Token} from "./Token.sol";
 error CrowdFund__NotAOwner();
 error CrowdFund__TimeLineNotInTheFuture();
 error CrowdFund__FundingGoalCantBeZero();
+error CrowdFund__ProjectDoesNotExist(uint256 id);
+error CrowdFund__AmountCantBeZero();
+error CrowdFund__InsufficientBalance();
 
 /// @title CrowdFund
 /// @author Favour Aniogor
@@ -29,6 +32,14 @@ contract CrowdFund {
     modifier onlyOwners() {
         if (!s_projectOwners[msg.sender]) {
             revert CrowdFund__NotAOwner();
+        }
+        _;
+    }
+
+    ///@notice This checks and ensures if the project exists.
+    modifier projectExist(uint256 _id) {
+        if (_id >= s_id) {
+            revert CrowdFund__ProjectDoesNotExist(_id);
         }
         _;
     }
@@ -60,7 +71,16 @@ contract CrowdFund {
     ///@notice This allows users to fund project that have been created and timeline has not exceeded
     ///@param _id the id of the project you want to fund
     ///@param _amount the value to want to fund the project with.
-    function fundProject(uint256 _id, uint256 _amount) external {
+    function fundProject(
+        uint256 _id,
+        uint256 _amount
+    ) external projectExist(_id) {
+        if (_amount <= 0) {
+            revert CrowdFund__AmountCantBeZero();
+        }
+        if (i_crowdFundToken.balanceOf(msg.sender) < _amount) {
+            revert CrowdFund__InsufficientBalance();
+        }
         i_crowdFundToken.transferFrom(msg.sender, address(this), _amount);
         s_projectIdToBalance[_id] += _amount;
         s_addressToAmountFunded[msg.sender][_id] += _amount;
