@@ -105,7 +105,7 @@ contract CrowdFund {
         if (_timeLine <= block.timestamp) {
             revert CrowdFund__TimeLineNotInTheFuture();
         }
-        Project _newProject = Project(_fundingGoal, _timeLine);
+        Project memory _newProject = Project(_fundingGoal, _timeLine);
         s_idToProject[s_id] = _newProject;
         emit CreateProject(msg.sender, s_id, _fundingGoal);
         s_id++;
@@ -146,7 +146,7 @@ contract CrowdFund {
         s_addressToAmountFunded[msg.sender][_id] = 0;
         s_projectIdToBalance[_id] -= _balance;
         i_crowdFundToken.transfer(msg.sender, _balance);
-        emit RecoveredFunds(msg.sender, _id, _amount);
+        emit RecoveredFunds(msg.sender, _id, _balance);
     }
 
     ///@notice This allows a project owner add more project owners
@@ -171,7 +171,8 @@ contract CrowdFund {
         projectExist(_id)
         returns (uint256 fundingGoal, uint256 timeline)
     {
-        (fundingGoal, timeline) = s_idToProject[_id];
+        fundingGoal = s_idToProject[_id].fundingGoal;
+        timeline = s_idToProject[_id].timeline;
     }
 
     /// @notice This gets the amount a user pledged to a project
