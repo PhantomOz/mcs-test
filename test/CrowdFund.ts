@@ -4,7 +4,7 @@ import {
 } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
 import { expect } from "chai";
-import hre from "hardhat";
+import hre, { ethers } from "hardhat";
 
 describe("CrowdFund", function () {
   // We define a fixture to reuse the same setup in every test.
@@ -60,10 +60,23 @@ describe("CrowdFund", function () {
       await expect(crowdFund.createProject(1000, timeLine))
         .to.emit(crowdFund, "CreateProject")
         .withArgs(owner.address, 0, 1000);
+      await expect((await crowdFund.getProject(0))[0]).to.be.equal(1000n);
     });
   });
 
   describe("Fund Project", function () {
+    it("Should revert with the CrowdFund__ProjectDoesNotExist error", async function () {
+      const { crowdFund, otherAccount } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await time.increase(100000000000000);
+      await expect(crowdFund.connect(otherAccount).fundProject(1, 100))
+        .to.be.revertedWithCustomError(
+          crowdFund,
+          "CrowdFund__ProjectDoesNotExist"
+        )
+        .withArgs(1);
+    });
     it("Should revert with the CrowdFund__TimelineElapsed error", async function () {
       const { crowdFund, otherAccount } = await loadFixture(deployCrowdFund);
       const timeLine = (await time.latest()) + 100000000;
@@ -108,6 +121,19 @@ describe("CrowdFund", function () {
   });
 
   describe("Recover Funds", function () {
+    it("Should revert with CrowdFund__ProjectDoesNotExist error", async function () {
+      const { crowdFund, owner, cft } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await cft.approve(crowdFund.target, 100);
+      await crowdFund.fundProject(0, 100);
+      await expect(crowdFund.recoverFunds(1))
+        .to.be.revertedWithCustomError(
+          crowdFund,
+          "CrowdFund__ProjectDoesNotExist"
+        )
+        .withArgs(1);
+    });
     it("Should revert with CrowdFund__TimelineNotElapsed error", async function () {
       const { crowdFund, owner, cft } = await loadFixture(deployCrowdFund);
       const timeLine = (await time.latest()) + 100000000;
@@ -142,6 +168,36 @@ describe("CrowdFund", function () {
       await expect(crowdFund.recoverFunds(0))
         .to.emit(crowdFund, "RecoveredFunds")
         .withArgs(owner.address, 0, 100);
+    });
+  });
+
+  describe("Add Project Owner", function () {
+    it("Should revert with CrowdFund__NotAOwner error", async function () {
+      const { crowdFund, otherAccount } = await loadFixture(deployCrowdFund);
+      await expect(
+        crowdFund
+          .connect(otherAccount)
+          .addProjectOwner(await ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(crowdFund, "CrowdFund__NotAOwner");
+    });
+
+    it("Should revert with CrowdFund__OwnerCantBeZeroAddress error", async function () {
+      const { crowdFund } = await loadFixture(deployCrowdFund);
+      await expect(
+        crowdFund.addProjectOwner(await ethers.ZeroAddress)
+      ).to.be.revertedWithCustomError(
+        crowdFund,
+        "CrowdFund__OwnerCantBeZeroAddress"
+      );
+    });
+
+    it("Should revert with CrowdFund__OwnerCantBeZeroAddress error", async function () {
+      const { crowdFund, otherAccount, owner } = await loadFixture(
+        deployCrowdFund
+      );
+      await expect(crowdFund.addProjectOwner(otherAccount))
+        .to.emit(crowdFund, "NewProjectOwner")
+        .withArgs(otherAccount.address, owner.address);
     });
   });
 });
