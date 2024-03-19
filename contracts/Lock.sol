@@ -56,6 +56,14 @@ contract CrowdFund {
         uint256 indexed _amount
     );
 
+    /// @notice Emits this when a project owner adds a new owner
+    /// @param _newOwner the user being adde3d as a owner
+    /// @param _projectOwner the project owner that added the user
+    event NewProjectOwner(
+        address indexed _newOwner,
+        address indexed _projectOwner
+    );
+
     ///@notice custom datatype Project
     struct Project {
         uint256 fundingGOal;
@@ -141,10 +149,13 @@ contract CrowdFund {
         emit RecoveredFunds(msg.sender, _id, _amount);
     }
 
+    ///@notice This allows a project owner add more project owners
+    ///@param _newOwner the user address that is to be added to owners map
     function addProjectOwner(address _newOwner) external onlyOwners {
         if (_newOwner == address(0)) {
             revert CrowdFund__OwnerCantBeZeroAddress();
         }
         s_projectOwners[_newOwner] = true;
+        emit NewProjectOwner(_newOwner, msg.sender);
     }
 }
