@@ -158,4 +158,17 @@ contract CrowdFund {
         s_projectOwners[_newOwner] = true;
         emit NewProjectOwner(_newOwner, msg.sender);
     }
+
+    ///@notice This is a view function to get project by Id
+    ///@param _id this is the id of the project you want to get
+    function getProject(
+        address _id
+    )
+        external
+        view
+        projectExist(_id)
+        returns (uint256 fundingGOal, uint256 timeline)
+    {
+        (fundingGOal, timeline) = s_idToProject[_id];
+    }
 }
