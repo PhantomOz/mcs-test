@@ -35,6 +35,16 @@ contract CrowdFund {
         uint256 indexed _fundingGoal
     );
 
+    /// @notice Emits this event when a project is funded by a user
+    /// @param _donor the user funding the project.
+    /// @param _id the id of the project that is being funded
+    /// @param _amount the amount user is funding the project with
+    event FundProject(
+        address indexed _donor,
+        uint256 indexed _id,
+        uint256 indexed _amount
+    );
+
     ///@notice custom datatype Project
     struct Project {
         uint256 fundingGOal;
@@ -101,6 +111,7 @@ contract CrowdFund {
         i_crowdFundToken.transferFrom(msg.sender, address(this), _amount);
         s_projectIdToBalance[_id] += _amount;
         s_addressToAmountFunded[msg.sender][_id] += _amount;
+        emit FundProject(msg.sender, _id, _amount);
     }
 
     ///@notice This allows users to be able to withdraw their funds if the timeline of a project elapses and the goal is not met
