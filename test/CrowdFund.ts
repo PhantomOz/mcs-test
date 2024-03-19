@@ -200,4 +200,26 @@ describe("CrowdFund", function () {
         .withArgs(otherAccount.address, owner.address);
     });
   });
+
+  describe("Get Project", function () {
+    it("Should revert with CrowdFund__ProjectDoesNotExist error", async function () {
+      const { crowdFund } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 10000000;
+      await expect(crowdFund.getProject(1))
+        .to.be.revertedWithCustomError(
+          crowdFund,
+          "CrowdFund__ProjectDoesNotExist"
+        )
+        .withArgs(1);
+    });
+    it("Should create new project", async function () {
+      const { crowdFund } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 10000000;
+      await crowdFund.createProject(1000, timeLine);
+      await expect((await crowdFund.getProject(0))[0]).to.be.equal(1000n);
+      await expect((await crowdFund.getProject(0))[1]).to.be.equal(
+        BigInt(timeLine)
+      );
+    });
+  });
 });
