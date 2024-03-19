@@ -201,10 +201,9 @@ describe("CrowdFund", function () {
     });
   });
 
-  describe("Get Project", function () {
+  describe("View Function Errors", function () {
     it("Should revert with CrowdFund__ProjectDoesNotExist error", async function () {
       const { crowdFund } = await loadFixture(deployCrowdFund);
-      const timeLine = (await time.latest()) + 10000000;
       await expect(crowdFund.getProject(1))
         .to.be.revertedWithCustomError(
           crowdFund,
@@ -220,6 +219,24 @@ describe("CrowdFund", function () {
       await expect((await crowdFund.getProject(0))[1]).to.be.equal(
         BigInt(timeLine)
       );
+    });
+    it("Should revert with CrowdFund__ProjectDoesNotExist error", async function () {
+      const { crowdFund } = await loadFixture(deployCrowdFund);
+      await expect(crowdFund.getProjectBalance(1))
+        .to.be.revertedWithCustomError(
+          crowdFund,
+          "CrowdFund__ProjectDoesNotExist"
+        )
+        .withArgs(1);
+    });
+    it("Should revert with CrowdFund__ProjectDoesNotExist error", async function () {
+      const { crowdFund, owner } = await loadFixture(deployCrowdFund);
+      await expect(crowdFund.getFundsPledgeByOwner(1, owner))
+        .to.be.revertedWithCustomError(
+          crowdFund,
+          "CrowdFund__ProjectDoesNotExist"
+        )
+        .withArgs(1);
     });
   });
 });
