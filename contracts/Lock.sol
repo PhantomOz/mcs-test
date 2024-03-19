@@ -25,7 +25,17 @@ contract CrowdFund {
         private s_addressToAmountFunded; //A 2D Map of the address of a user to the amount donated to a projectId.
     uint256 private s_id; //this serves as the projects count.
 
-    //Oir custom datatype Project
+    /// @notice Emits this event when a project Owner creates a new project.
+    /// @param _owner the project owner that created the project.
+    /// @param _id the id of the project that is created.
+    /// @param _fundingGoal the funding goal of the project that is created.
+    event CreateProject(
+        address indexed _owner,
+        uint256 indexed _id,
+        uint256 indexed _fundingGoal
+    );
+
+    ///@notice custom datatype Project
     struct Project {
         uint256 fundingGOal;
         uint256 timeline;
@@ -68,6 +78,7 @@ contract CrowdFund {
         }
         Project _newProject = Project(_fundingGoal, _timeLine);
         s_idToProject[s_id] = _newProject;
+        emit CreateProject(msg.sender, s_id, _fundingGoal);
         s_id++;
     }
 
