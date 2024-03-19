@@ -45,6 +45,16 @@ contract CrowdFund {
         uint256 indexed _amount
     );
 
+    /// @notice Emits this when a user recover the funds he has pledged to a project.
+    /// @param _donor the user recovering the fund.
+    /// @param _id the id of the project the funds is being recovered from.
+    /// @param _amount the amount being recovered by the user.
+    event RecoveredFunds(
+        address indexed _donor,
+        uint256 indexed _id,
+        uint256 indexed _amount
+    );
+
     ///@notice custom datatype Project
     struct Project {
         uint256 fundingGOal;
@@ -126,6 +136,7 @@ contract CrowdFund {
         uint256 _balance = s_addressToAmountFunded[msg.sender][_id];
         s_addressToAmountFunded[msg.sender][_id] = 0;
         s_projectIdToBalance[_id] -= _balance;
-        i_crowdFundToken.transfer(_balance);
+        i_crowdFundToken.transfer(msg.sender, _balance);
+        emit RecoveredFunds(msg.sender, _id, _amount);
     }
 }
