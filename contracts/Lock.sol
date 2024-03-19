@@ -12,6 +12,7 @@ error CrowdFund__InsufficientBalance();
 error CrowdFund__TimelineNotElapsed();
 error CrowdFund__TimelineElapsed();
 error CrowdFund__FundingGoalMet();
+error CrowdFund__OwnerCantBeZeroAddress();
 
 /// @title CrowdFund
 /// @author Favour Aniogor
@@ -138,5 +139,12 @@ contract CrowdFund {
         s_projectIdToBalance[_id] -= _balance;
         i_crowdFundToken.transfer(msg.sender, _balance);
         emit RecoveredFunds(msg.sender, _id, _amount);
+    }
+
+    function addProjectOwner(address _newOwner) external onlyOwners {
+        if (_newOwner == address(0)) {
+            revert CrowdFund__OwnerCantBeZeroAddress();
+        }
+        s_projectOwners[_newOwner] = true;
     }
 }
