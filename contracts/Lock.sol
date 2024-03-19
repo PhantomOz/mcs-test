@@ -66,7 +66,7 @@ contract CrowdFund {
 
     ///@notice custom datatype Project
     struct Project {
-        uint256 fundingGOal;
+        uint256 fundingGoal;
         uint256 timeline;
     }
 
@@ -161,14 +161,27 @@ contract CrowdFund {
 
     ///@notice This is a view function to get project by Id
     ///@param _id this is the id of the project you want to get
+    ///@return fundingGoal the amount the project wishes to reach
+    ///@return timeline the time the projectexpires
     function getProject(
-        address _id
+        uint256 _id
     )
         external
         view
         projectExist(_id)
-        returns (uint256 fundingGOal, uint256 timeline)
+        returns (uint256 fundingGoal, uint256 timeline)
     {
-        (fundingGOal, timeline) = s_idToProject[_id];
+        (fundingGoal, timeline) = s_idToProject[_id];
+    }
+
+    /// @notice This gets the amount a user pledged to a project
+    /// @param _id the id of the project you want to check
+    /// @param _donor the address of the user you want to check
+    /// @return _balance the amount the user has pledged to the project
+    function getFundsPledgeByOwner(
+        uint256 _id,
+        address _donor
+    ) external view projectExist(_id) returns (uint256 _balance) {
+        _balance = s_addressToAmountFunded[_donor][_id];
     }
 }
