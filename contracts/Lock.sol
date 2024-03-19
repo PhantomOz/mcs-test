@@ -184,4 +184,13 @@ contract CrowdFund {
     ) external view projectExist(_id) returns (uint256 _balance) {
         _balance = s_addressToAmountFunded[_donor][_id];
     }
+
+    ///@notice This gets the amount the project has raised
+    ///@param _id the id of the project you want to check
+    ///@return _balance the amount the project has raised
+    function getProjectBalance(
+        uint256 _id
+    ) external view projectExist(_id) returns (uint256 _balance) {
+        _balance = s_projectIdToBalance[_id];
+    }
 }
