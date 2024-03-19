@@ -136,7 +136,7 @@ contract CrowdFund {
     ///@notice This allows users to be able to withdraw their funds if the timeline of a project elapses and the goal is not met
     ///@param _id the project you want to recover your funds from.
     function recoverFunds(uint256 _id) external projectExist(_id) {
-        if (s_idToProject[_id].timeline < block.timestamp) {
+        if (s_idToProject[_id].timeline > block.timestamp) {
             revert CrowdFund__TimelineNotElapsed();
         }
         if (s_projectIdToBalance[_id] >= s_idToProject[_id].fundingGoal) {

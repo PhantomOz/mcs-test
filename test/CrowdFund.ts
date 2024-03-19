@@ -100,6 +100,48 @@ describe("CrowdFund", function () {
       await expect(crowdFund.fundProject(0, 100))
         .to.emit(crowdFund, "FundProject")
         .withArgs(owner.address, 0, 100);
+      await expect(
+        await crowdFund.getFundsPledgeByOwner(0, owner.address)
+      ).to.be.eql(100n);
+      await expect(await crowdFund.getProjectBalance(0)).to.be.eql(100n);
+    });
+  });
+
+  describe("Recover Funds", function () {
+    it("Should revert with CrowdFund__TimelineNotElapsed error", async function () {
+      const { crowdFund, owner, cft } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await cft.approve(crowdFund.target, 100);
+      await crowdFund.fundProject(0, 100);
+      await expect(crowdFund.recoverFunds(0)).to.be.revertedWithCustomError(
+        crowdFund,
+        "CrowdFund__TimelineNotElapsed"
+      );
+    });
+    it("Should revert with CrowdFund__FundingGoalMet error", async function () {
+      const { crowdFund, owner, cft } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await cft.approve(crowdFund.target, 1000);
+      await crowdFund.fundProject(0, 1000);
+      await time.increase(100000000);
+      await expect(crowdFund.recoverFunds(0)).to.be.revertedWithCustomError(
+        crowdFund,
+        "CrowdFund__FundingGoalMet"
+      );
+    });
+
+    it("Should recoverfunds successfully", async function () {
+      const { crowdFund, owner, cft } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await cft.approve(crowdFund.target, 100);
+      await crowdFund.fundProject(0, 100);
+      await time.increase(100000000);
+      await expect(crowdFund.recoverFunds(0))
+        .to.emit(crowdFund, "RecoveredFunds")
+        .withArgs(owner.address, 0, 100);
     });
   });
 });
