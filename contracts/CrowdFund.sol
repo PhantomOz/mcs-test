@@ -118,7 +118,7 @@ contract CrowdFund {
         uint256 _id,
         uint256 _amount
     ) external projectExist(_id) {
-        if (s_idToProject[_id].timeline >= block.timestamp) {
+        if (s_idToProject[_id].timeline <= block.timestamp) {
             revert CrowdFund__TimelineElapsed();
         }
         if (_amount <= 0) {

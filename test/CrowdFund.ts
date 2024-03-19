@@ -62,4 +62,44 @@ describe("CrowdFund", function () {
         .withArgs(owner.address, 0, 1000);
     });
   });
+
+  describe("Fund Project", function () {
+    it("Should revert with the CrowdFund__TimelineElapsed error", async function () {
+      const { crowdFund, otherAccount } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await time.increase(100000000000000);
+      await expect(
+        crowdFund.connect(otherAccount).fundProject(0, 100)
+      ).to.be.revertedWithCustomError(crowdFund, "CrowdFund__TimelineElapsed");
+    });
+    it("Should revert with the CrowdFund__AmountCantBeZero error", async function () {
+      const { crowdFund, otherAccount } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await expect(
+        crowdFund.connect(otherAccount).fundProject(0, 0)
+      ).to.be.revertedWithCustomError(crowdFund, "CrowdFund__AmountCantBeZero");
+    });
+    it("Should revert with the CrowdFund__InsufficientBalance error", async function () {
+      const { crowdFund, otherAccount } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await expect(
+        crowdFund.connect(otherAccount).fundProject(0, 100)
+      ).to.be.revertedWithCustomError(
+        crowdFund,
+        "CrowdFund__InsufficientBalance"
+      );
+    });
+    it("Should fund project succesfully", async function () {
+      const { crowdFund, owner, cft } = await loadFixture(deployCrowdFund);
+      const timeLine = (await time.latest()) + 100000000;
+      await crowdFund.createProject(1000, timeLine);
+      await cft.approve(crowdFund.target, 100);
+      await expect(crowdFund.fundProject(0, 100))
+        .to.emit(crowdFund, "FundProject")
+        .withArgs(owner.address, 0, 100);
+    });
+  });
 });
